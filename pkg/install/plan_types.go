@@ -8,14 +8,19 @@ import (
 	"github.com/apprenda/kismatic/pkg/ssh"
 )
 
-const DefaultPackageManagerProvider = "helm"
+const (
+	DefaultPackageManagerProvider = "helm"
+	CNIProviderContiv             = "contiv"
+	CNIProviderCalico             = "calico"
+	CNIProviderWeave              = "weave"
+)
 
 func PackageManagerProviders() []string {
 	return []string{"helm", ""}
 }
 
 func CNIProviders() []string {
-	return []string{"calico", "weave"} //, "contiv", "custom"}
+	return []string{CNIProviderCalico, CNIProviderContiv, CNIProviderWeave}
 }
 
 func CalicoMode() []string {
