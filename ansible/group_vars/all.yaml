@@ -247,6 +247,11 @@ cni_bin_orig_img: apprenda/cni-bin:{{ cni_version }}
 cni_bin_priv_img: "{{ docker_registry_full_url }}/{{ cni_bin_orig_img }}"
 cni_bin_img: '{% if load_private_images|bool == true %}{{ cni_bin_priv_img }}{% else %}{{ cni_bin_orig_img }}{% endif %}'
 
+contiv_netplugin_orig_img: contiv/netplugin:{{ contiv_version }}
+contiv_netplugin_priv_img: "{{ docker_registry_full_url }}/{{ contiv_netplugin_orig_img }}"
+contiv_netplugin_img: '{% if load_private_images|bool == true %}{{ contiv_netplugin_priv_img }}{% else %}{{ contiv_netplugin_orig_img }}{% endif %}'
+
+
 weave_orig_img: weaveworks/weave-kube:{{ weave_version }}
 weave_priv_img: "{{ docker_registry_full_url }}/{{ weave_orig_img }}"
 weave_img: '{% if load_private_images|bool == true %}{{ weave_priv_img }}{% else %}{{ weave_orig_img }}{% endif %}'

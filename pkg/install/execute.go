@@ -770,7 +770,7 @@ func (ae *ansibleExecutor) buildClusterCatalog(p *Plan) (*ansible.ClusterCatalog
 		cc.CNI.Provider = p.AddOns.CNI.Provider
 		cc.CNI.Options.Calico.Mode = p.AddOns.CNI.Options.Calico.Mode
 
-		if cc.CNI.Provider == CNIProviderContiv {
+		if cc.CNI.Provider == cniProviderContiv {
 			cc.InsecureNetworkingEtcd = true
 		}
 	}

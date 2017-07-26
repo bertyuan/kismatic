@@ -71,7 +71,7 @@ spec:
         # container programs network policy and routes on each
         # host.
         - name: contiv-netplugin
-          image: contiv/netplugin:{{ contiv_version }}
+          image: "{{ contiv_netplugin_img }}"
           args:
             - -pkubernetes
           env:

@@ -39,7 +39,7 @@ metadata:
 ---
 # This manifest deploys the Contiv API Server on Kubernetes.
 apiVersion: extensions/v1beta1
-kind: ReplicaSet
+kind: DaemonSet
 metadata:
   name: contiv-netmaster
   namespace: kube-system
@@ -48,7 +48,6 @@ metadata:
 spec:
   # The netmaster should have 1, 3, 5 nodes of which one is active at any given time.
   # More nodes are desired in a production environment for HA.
-  replicas: 1
   template:
     metadata:
       name: contiv-netmaster
@@ -65,12 +64,12 @@ spec:
       # tolerations:
       # - key: node-role.kubernetes.io/master
       #   effect: NoSchedule
-      # nodeSelector:
-      #   node-role.kubernetes.io/master: ""
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
       serviceAccountName: contiv-netmaster
       containers:
         - name: contiv-netmaster
-          image: contiv/netplugin:{{ contiv_version }}
+          image: "{{ contiv_netplugin_img }}"
           args:
             - -m
             - -pkubernetes

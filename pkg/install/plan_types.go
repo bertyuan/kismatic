@@ -9,25 +9,24 @@ import (
 )
 
 const (
-	DefaultPackageManagerProvider = "helm"
-	CNIProviderContiv             = "contiv"
-	CNIProviderCalico             = "calico"
-	CNIProviderWeave              = "weave"
+	cniProviderContiv = "contiv"
+	cniProviderCalico = "calico"
+	cniProviderWeave  = "weave"
 )
 
-func PackageManagerProviders() []string {
+func packageManagerProviders() []string {
 	return []string{"helm", ""}
 }
 
-func CNIProviders() []string {
-	return []string{CNIProviderCalico, CNIProviderContiv, CNIProviderWeave}
+func cniProviders() []string {
+	return []string{cniProviderCalico, cniProviderContiv, cniProviderWeave}
 }
 
-func CalicoMode() []string {
+func calicoMode() []string {
 	return []string{"overlay", "routed"}
 }
 
-func ServiceTypes() []string {
+func serviceTypes() []string {
 	return []string{"ClusterIP", "NodePort", "LoadBalancer", "ExternalName"}
 }
 

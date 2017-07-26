@@ -1,32 +1,4 @@
 ---
-  # TODO: Move to CNI container install
-  - name: download CNI binaries
-    get_url: 
-      url: https://github.com/containernetworking/cni/releases/download/v0.5.2/cni-amd64-v0.5.2.tgz
-      dest: /tmp
-      mode: 0440
-
-  - name: create tmp dir for cni package
-    file:
-      path: /tmp/cni
-      state: directory
-
-  - name: extract CNI binaries
-    unarchive:
-      src: /tmp/cni-amd64-v0.5.2.tgz
-      dest: /tmp/cni
-      remote_src: true
-
-  - name: create target dir for cni binaries
-    file:
-      path: /opt/cni/bin
-      state: directory
-
-  - name: copy CNI binaries to /opt/cni/bin
-    raw: cp -r /tmp/cni/* /opt/cni/bin
-
-  
-  
   # Create a secret that contains the contiv certificates.
   # Runs on the first master node if we find that the secret does 
   # not exist
@@ -60,29 +32,10 @@
         state: absent
     when: inventory_hostname == groups['master'][0] and certs_check_result.stdout != contiv.proxy_server_certs_secret_name
 
-  # Download, deploy and configure contiv.
+  # Deploy and configure contiv.
   # Runs on master nodes so that the netctl utility is available to operators if they
   # ever need it.
   - block:
-    - name: download Contiv
-      get_url: 
-        url: https://github.com/contiv/install/releases/download/1.1.1/contiv-1.1.1.tgz
-        dest: /tmp
-        mode: 0440
-
-    - name: extract Contiv package
-      unarchive: 
-        src: /tmp/contiv-1.1.1.tgz
-        dest: /tmp
-        remote_src: true
-    
-    - name: install netctl cli
-      copy:
-        src: /tmp/contiv-1.1.1/netctl
-        dest: /usr/bin/netctl
-        remote_src: true
-        mode: 0755
-
     - name: create /etc/contiv directory
       file:
         path: "{{ contiv.dir.config }}"
@@ -106,7 +59,7 @@
     
     # Wait until netmaster pods are up
     - name: get desired number of netmaster pods
-      command: kubectl get rs contiv-netmaster -o=jsonpath='{.status.replicas}' --namespace=kube-system --kubeconfig {{ kubernetes_kubeconfig_path }}
+      command: kubectl get ds contiv-netmaster -o=jsonpath='{.status.desiredNumberScheduled}' --namespace=kube-system --kubeconfig {{ kubernetes_kubeconfig_path }}
       register: desiredPods
       until: desiredPods|success
       retries: 20
@@ -114,7 +67,7 @@
       run_once: true
 
     - name: wait until all netmaster pods are ready
-      command: kubectl get rs contiv-netmaster -o=jsonpath='{.status.availableReplicas}' --namespace=kube-system --kubeconfig {{ kubernetes_kubeconfig_path }}
+      command: kubectl get ds contiv-netmaster -o=jsonpath='{.status.numberAvailable}' --namespace=kube-system --kubeconfig {{ kubernetes_kubeconfig_path }}
       register: readyPods
       until: desiredPods.stdout|int == readyPods.stdout|int
       retries: 20
@@ -129,22 +82,16 @@
       when: desiredPods.stdout|int != readyPods.stdout|int
     
     - name: set forwarding mode to routed
-      command: netctl --netmaster http://localhost:9999 global set --fwd-mode routing
-      args:
-        chdir: /tmp/contiv-1.1.1
+      command: docker run --net host --rm --entrypoint /contiv/bin/netctl {{ contiv_netplugin_img }} --netmaster http://localhost:9999 global set --fwd-mode routing
       run_once: true
 
     - name: list existing contiv networks
-      command: netctl --netmaster http://localhost:9999 net ls
-      args:
-        chdir: /tmp/contiv-1.1.1
+      command: docker run --net host --rm --entrypoint /contiv/bin/netctl {{ contiv_netplugin_img }} --netmaster http://localhost:9999 net ls
       register: contiv_networks
       run_once: true
 
     - name: create infra network if missing
-      command: netctl --netmaster http://localhost:9999 net create -n infra -s 132.1.1.0/24 -g 132.1.1.1 contivh1 # using defaults from installation script
-      args:
-        chdir: /tmp/contiv-1.1.1
+      command: docker run --net host --rm --entrypoint /contiv/bin/netctl {{ contiv_netplugin_img }} --netmaster http://localhost:9999 net create -n infra -s 132.1.1.0/24 -g 132.1.1.1 contivh1 # using defaults from installation script
       when: "'contivh1' not in contiv_networks.stdout"
       run_once: true
 
@@ -177,16 +124,12 @@
       when: desiredPods.stdout|int != readyPods.stdout|int
 
     - name: list existing contiv networks
-      command: netctl --netmaster http://localhost:9999 net ls
-      args:
-        chdir: /tmp/contiv-1.1.1
+      command: docker run --net host --rm --entrypoint /contiv/bin/netctl {{ contiv_netplugin_img }} --netmaster http://localhost:9999 net ls
       register: contiv_networks
       run_once: true
 
     - name: create pod network # the name of the network, 'default-net', is a magic string. don't change.
-      command: netctl --netmaster http://localhost:9999 net create -t default --subnet={{ kubernetes_pods_cidr }} --gateway {{ kubernetes_pods_cidr | ipaddr('net') | ipaddr('1') | ipaddr('address') }} default-net
-      args:
-        chdir: /tmp/contiv-1.1.1
+      command: docker run --net host --rm --entrypoint /contiv/bin/netctl {{ contiv_netplugin_img }} --netmaster http://localhost:9999 net create -t default --subnet={{ kubernetes_pods_cidr }} --gateway {{ kubernetes_pods_cidr | ipaddr('net') | ipaddr('1') | ipaddr('address') }} default-net
       run_once: true
       when:  "'default-net' not in contiv_networks.stdout"
 

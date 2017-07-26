@@ -615,7 +615,7 @@ func TestContivProxyServerCertGenerated(t *testing.T) {
 	defer cleanup(pki.GeneratedCertsDirectory, t)
 
 	p := getPlan()
-	p.AddOns.CNI = &CNI{Provider: CNIProviderContiv}
+	p.AddOns.CNI = &CNI{Provider: cniProviderContiv}
 
 	ca, err := pki.GenerateClusterCA(p)
 	if err != nil {

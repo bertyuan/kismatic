@@ -228,7 +228,7 @@ func certManifestForCluster(plan Plan) ([]certificateSpec, error) {
 	}
 
 	// Contiv certificates
-	if plan.AddOns.CNI.Provider == CNIProviderContiv {
+	if plan.AddOns.CNI.Provider == cniProviderContiv {
 		m = append(m, certificateSpec{
 			description: "contiv proxy server",
 			filename:    contivProxyServerCertFilename,
